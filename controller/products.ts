@@ -30,4 +30,33 @@ const getProducts = ({response}:{response:Response}) => {
     }
 }
 
-export { getProducts }
+
+const getProduct = ({response}:{response:Response}) => {
+    response.body = {
+        message:"success",
+        data: produts
+    }
+}
+
+const craeteProduct = ({response}:{response:Response}) => {
+    response.body = {
+        message:"success",
+        data: produts
+    }
+}
+
+const updateProduct = ({response}:{response:Response}) => {
+    response.body = {
+        message:"success",
+        data: produts
+    }
+}
+
+const deleteProduct = ({response}:{response:Response}) => {
+    response.body = {
+        message:"success",
+        data: produts
+    }
+}
+
+export { getProducts, getProduct, craeteProduct, updateProduct, deleteProduct }
