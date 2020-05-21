@@ -1,8 +1,8 @@
-import {  Response } from "https://deno.land/x/oak/mod.ts";
-
+import {  Request, Response } from "https://deno.land/x/oak/mod.ts";
+import { v4 } from "https://deno.land/std/uuid/mod.ts";
 import Product from "../types.ts";
 
-const produts: Product[] = [
+const products: Product[] = [
     {
         id:1,
         name:"a",
@@ -26,13 +26,13 @@ const produts: Product[] = [
 const getProducts = ({response}:{response:Response}) => {
     response.body = {
         message:"success",
-        data: produts
+        data: products
     }
 }
 
 
 const getProduct = ({params, response}:{params : {id: string }, response:Response}) => {
-    const product: Product | undefined = produts.find( p => p.id === params.id)
+    const product: Product | undefined = products.find( p => p.id === params.id)
 
     if(product){
         response.status = 200
@@ -49,24 +49,37 @@ const getProduct = ({params, response}:{params : {id: string }, response:Respons
     }
 }
 
-const craeteProduct = ({response}:{response:Response}) => {
+const craeteProduct = async ({request, response}:{request: Request, response:Response}) => {
+    const body = await request.body();
+    if(!request.hasBody){
+        response.status = 400
+        response.body = {
+            message: "failure",
+            data: null
+        }
+        return
+    }
+    const product: Product  = body.value
+    product.id = v4.generate()
+    products.push(product)
+    response.status = 200
     response.body = {
-        message:"success",
-        data: produts
+        message: "successs",
+        data: product
     }
 }
 
 const updateProduct = ({response}:{response:Response}) => {
     response.body = {
         message:"success",
-        data: produts
+        data: products
     }
 }
 
 const deleteProduct = ({response}:{response:Response}) => {
     response.body = {
         message:"success",
-        data: produts
+        data: products
     }
 }
 
