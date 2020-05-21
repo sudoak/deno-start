@@ -31,10 +31,21 @@ const getProducts = ({response}:{response:Response}) => {
 }
 
 
-const getProduct = ({response}:{response:Response}) => {
+const getProduct = ({params, response}:{params : {id: string }, response:Response}) => {
+    const product: Product | undefined = produts.find( p => p.id === params.id)
+
+    if(product){
+        response.status = 200
+        response.body = {
+            message: "success",
+            data: product
+        }
+        return
+    }
+    response.status = 404
     response.body = {
-        message:"success",
-        data: produts
+        message: "failure",
+        data: null
     }
 }
 
