@@ -92,7 +92,20 @@ const updateProduct = async ({params, request, response}:{params:{id:string}, re
 
 }
 
-const deleteProduct = ({response}:{response:Response}) => {
+const deleteProduct = ({params, response}:{params: {id: string }, response:Response}) => {
+    const product: Product | undefined = products.find( p => p.id === params.id)
+    
+    if(!product){
+        response.status = 404
+        response.body = {
+            message: "failure",
+            data: null
+        }
+        return
+    }
+
+    products = products.filter( p => p.id !==  params.id)
+    
     response.body = {
         message:"success",
         data: products
