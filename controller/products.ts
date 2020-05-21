@@ -2,7 +2,7 @@ import {  Request, Response } from "https://deno.land/x/oak/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 import Product from "../types.ts";
 
-const products: Product[] = [
+let products: Product[] = [
     {
         id:1,
         name:"a",
@@ -69,11 +69,27 @@ const craeteProduct = async ({request, response}:{request: Request, response:Res
     }
 }
 
-const updateProduct = ({response}:{response:Response}) => {
-    response.body = {
-        message:"success",
-        data: products
+const updateProduct = async ({params, request, response}:{params:{id:string}, request: Request, response:Response}) => {
+    const product: Product | undefined = products.find( p => p.id === params.id)
+    if(!product){
+        response.status = 404
+        response.body = {
+            message: "failure",
+            data: null
+        }
+        return
     }
+    const body = await request.body();
+
+    const updatedProduct: {name?: string, desc?: string, price?: number } = body.value
+
+    products = products.map( p => p.id === params.id ? {...p, ...updatedProduct} : p)
+
+    response.status = 200
+    response.body = {
+        message: "success"
+    }
+
 }
 
 const deleteProduct = ({response}:{response:Response}) => {
