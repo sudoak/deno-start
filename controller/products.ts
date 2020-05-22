@@ -1,30 +1,33 @@
 import {  Request, Response } from "https://deno.land/x/oak/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
-import Product from "../types.ts";
+import { Product } from "../types.ts";
 import DB from "../config/db/index.ts";
 
-let products: Product[] = [
-    {
-        id:1,
-        name:"a",
-        desc:"aaaaaaa",
-        price:1
-    },
-    {
-        id:1,
-        name:"b",
-        desc:"bbbbb",
-        price:3
-    },
-    {
-        id:1,
-        name:"c",
-        desc:"cccccc",
-        price:10
-    }
-]
+const MONGO_PRODUCTS = await DB.collection('products');
 
-const getProducts = ({response}:{response:Response}) => {
+// let products: Product[] = [
+//     {
+//         id:"1",
+//         name:"a",
+//         desc:"aaaaaaa",
+//         price:1
+//     },
+//     {
+//         id:"1",
+//         name:"b",
+//         desc:"bbbbb",
+//         price:3
+//     },
+//     {
+//         id:"1",
+//         name:"c",
+//         desc:"cccccc",
+//         price:10
+//     }
+// ]
+
+const getProducts = async ({response}:{response:Response}) => {
+    const products = await MONGO_PRODUCTS.find();
     response.body = {
         message:"success",
         data: products
@@ -32,8 +35,8 @@ const getProducts = ({response}:{response:Response}) => {
 }
 
 
-const getProduct = ({params, response}:{params : {id: string }, response:Response}) => {
-    const product: Product | undefined = products.find( p => p.id === params.id)
+const getProduct = async ({params, response}:{params : {id: string }, response:Response}) => {
+   const product: Product | undefined = await MONGO_PRODUCTS.find({_id: {"$oid": params.id}});
 
     if(product){
         response.status = 200
@@ -61,17 +64,17 @@ const craeteProduct = async ({request, response}:{request: Request, response:Res
         return
     }
     const product: Product  = body.value
-    product.id = v4.generate()
-    products.push(product)
+    // product.id = v4.generate()
+    const productId = await MONGO_PRODUCTS.insertOne(product);
     response.status = 200
     response.body = {
         message: "successs",
-        data: product
+        data: { ...product, productId}
     }
 }
 
 const updateProduct = async ({params, request, response}:{params:{id:string}, request: Request, response:Response}) => {
-    const product: Product | undefined = products.find( p => p.id === params.id)
+    const product: Product | undefined = await MONGO_PRODUCTS.find({_id: {"$oid": params.id}});
     if(!product){
         response.status = 404
         response.body = {
@@ -84,18 +87,26 @@ const updateProduct = async ({params, request, response}:{params:{id:string}, re
 
     const updatedProduct: {name?: string, desc?: string, price?: number } = body.value
 
-    products = products.map( p => p.id === params.id ? {...p, ...updatedProduct} : p)
+    const _ = {...product, ...updatedProduct}
+    const {matchedCount, modifiedCount, upsertedId} = await MONGO_PRODUCTS.updateOne({_id: {"$oid":params.id}}, { $set: _})
 
     response.status = 200
     response.body = {
-        message: "success"
+        message: "success",
+        data: {
+            matchedCount,
+            modifiedCount,
+            upsertedId
+        }
     }
 
 }
 
-const deleteProduct = ({params, response}:{params: {id: string }, response:Response}) => {
-    const product: Product | undefined = products.find( p => p.id === params.id)
-    
+const deleteProduct = async ({params, response}:{params: {id: string }, response:Response}) => {
+    const product: Product | undefined = await MONGO_PRODUCTS.find({_id: {"$oid": params.id}});
+    console.log('====================================');
+    console.log(product);
+    console.log('====================================');
     if(!product){
         response.status = 404
         response.body = {
@@ -104,12 +115,10 @@ const deleteProduct = ({params, response}:{params: {id: string }, response:Respo
         }
         return
     }
-
-    products = products.filter( p => p.id !==  params.id)
-    
+    const deleteCount = await MONGO_PRODUCTS.deleteOne({_id: {"$oid":params.id}})
     response.body = {
         message:"success",
-        data: products
+        data: deleteCount
     }
 }
 

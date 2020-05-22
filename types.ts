@@ -4,3 +4,5 @@ interface Product {
     desc: String,
     price: Number
 }
+
+export {Product}
